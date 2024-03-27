@@ -51,14 +51,6 @@ class Transformer(Module):
         self._d_model = d_model
 
     def forward(self, x, stage):
-        """
-        前向传播
-        :param x: 输入
-        :param stage: 用于描述此时是训练集的训练过程还是测试集的测试过程  测试过程中均不在加mask机制
-        :return: 输出，gate之后的二维向量，step-wise encoder中的score矩阵，channel-wise encoder中的score矩阵，step-wise embedding后的三维矩阵，channel-wise embedding后的三维矩阵，gate
-        """
-        # step-wise
-        # score矩阵为 input， 默认加mask 和 pe
         encoding_1 = self.embedding_channel(x)
         input_to_gather = encoding_1
 
@@ -68,7 +60,7 @@ class Transformer(Module):
             temp = torch.Tensor(range(0, self._d_model, 2))
             temp = temp * -(math.log(10000) / self._d_model)
             temp = torch.exp(temp).unsqueeze(0)
-            temp = torch.matmul(position.float(), temp)  # shape:[input, d_model/2]
+            temp = torch.matmul(position.float(), temp)  
             pe[:, 0::2] = torch.sin(temp)
             pe[:, 1::2] = torch.cos(temp)
 
@@ -78,14 +70,12 @@ class Transformer(Module):
             encoding_1, score_input = encoder(encoding_1, stage)
 
         # channel-wise
-        # score矩阵为channel 默认不加mask和pe
         encoding_2 = self.embedding_input(x.transpose(-1, -2))
         channel_to_gather = encoding_2
 
         for encoder in self.encoder_list_2:
             encoding_2, score_channel = encoder(encoding_2, stage)
 
-        # 三维变二维
         encoding_1 = encoding_1.reshape(encoding_1.shape[0], -1)
         encoding_2 = encoding_2.reshape(encoding_2.shape[0], -1)
 
@@ -93,7 +83,6 @@ class Transformer(Module):
         gate = F.softmax(self.gate(torch.cat([encoding_1, encoding_2], dim=-1)), dim=-1)
         encoding = torch.cat([encoding_1 * gate[:, 0:1], encoding_2 * gate[:, 1:2]], dim=-1)
 
-        # 输出
         output = self.output_linear(encoding)
 
         return output, encoding, score_input, score_channel, input_to_gather, channel_to_gather, gate
