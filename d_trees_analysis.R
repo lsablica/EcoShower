@@ -1,5 +1,5 @@
 library(tidyverse)
-library(depmixS4)
+library(rpart)
 library(lubridate)
 library(pROC)
 load("database4_20s.Rda")
@@ -46,20 +46,16 @@ Y_test <- Y[(135*180+1):nrow(X)]
 
 c(train_ratio =  sum(Y_train)/length(Y_train), test_ratio = sum(Y_test)/length(Y_test))
 
-#save using reticulate for python fit
+weights <- numeric(length(Y_train))
+weights[Y_train == 0] <- 1
+weights[Y_train == 1] <- 4
 
-library(reticulate)
-np <- import("numpy")
-np$save("X_train.npy", X_train)
-np$save("X_test.npy", X_test)
-np$save("Y_train.npy", Y_train)
-np$save("Y_test.npy", Y_test)
-
+data_train <- data.frame(shower = factor(Y_train), X_train)
+data_test <- data.frame(shower = factor(Y_test), X_test)
 
 set.seed(10)
-hmm_model  <- depmix(shower ~ ., data = data_train, nstates = 2, family = binomial(), verbose = TRUE)
-fit <-  fit(hmm_model, verbose = TRUE)
-dd <- posterior(fit, data_test)
+rf  <- ranger(shower ~ ., data = data_train, num.trees = 500, probability = TRUE)
+dd <- predict(rf, data_test)$predictions[,2]
 Predicted_main = dd > 0.5
 TA <- table(True = Y_test, Predicted = Predicted_main)
 FPR <- TA[1,2]/(TA[1,2]+TA[1,1])
@@ -86,13 +82,12 @@ Error_mat[,1] <- Error_main
 solo <- sapply(c("humidity","temperature", "soundavg", "soundpeak"), function(sensor){
   X_train_temp <- X_train[,grep(paste0("^.*",sensor,".*$"), dimnames(X_test)[[2]])]
   X_test_temp <- X_test[,grep(paste0("^.*",sensor,".*$"), dimnames(X_test)[[2]])]
-  data_train_temp <- data.frame(shower = Y_train, X_train_temp)
-  data_test_temp <- data.frame(shower = Y_test, X_test_temp)
+  data_train_temp <- data.frame(shower = factor(Y_train), X_train_temp)
+  data_test_temp <- data.frame(shower = factor(Y_test), X_test_temp)
   
   set.seed(10)
-  hmm_model  <- depmix(shower ~ ., data = data_train_temp, nstates = 2, family = binomial(), verbose = TRUE)
-  fit <-  fit(hmm_model, verbose = TRUE)
-  dd <- predict(fit, data_test_temp, type = "response")
+  rf  <- ranger(shower ~ ., data = data_train_temp, num.trees = 500, probability = TRUE, case.weights = weights, class.weights = c(1, 4), classification = TRUE)
+  dd <- predict(rf, data_test)$predictions[,2]
   AUC <- roc(Y_test, c(dd))$auc
   Predicted = dd > 0.5
   TA <- table(True = Y_test, Predicted = Predicted)
