@@ -5,3 +5,6 @@ Y_train = np.load('Y_train.npy')
 X_test = np.load('X_test.npy')
 Y_test = np.load('Y_test.npy')
 
+
+from seqlearn.hmm import MultinomialHMM
+
