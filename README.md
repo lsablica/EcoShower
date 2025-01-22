@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="misc/logo.png" alt="EcoShower Logo" width="200"/>
+  <img src="misc/logoo.png" alt="EcoShower Logo" width="200"/>
 
   # EcoShower
 
