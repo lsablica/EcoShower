@@ -52,11 +52,8 @@ The preprint of this work is currently under review and is available at [SSRN](h
 ## Data and Analysis
 
 ### Dataset
-The dataset comprises multi-modal sensor readings:
-- **Humidity**: Measured in relative humidity (%)
-- **Temperature**: Measured in degrees Celsius
-- **Sound**: Average and peak sound intensity in decibels (dB SPL)
-- **Ground Truth**: Start and stop events recorded using LoRaWAN-enabled buttons
+The raw data are currently not available due to privacy reasons. Only the cleaned and already prepared datasets are offered for now.
+The dataset comprises multi-modal sensor readings.
 
 ### Analysis Workflow
 1. **Data Cleaning and Preprocessing**: Sensor data synchronization, noise reduction, and transformation into time series format.
