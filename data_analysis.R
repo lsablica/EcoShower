@@ -2,7 +2,7 @@ library(tidyverse)
 library(keras)
 library(lubridate)
 library(pROC)
-load("database4_20s.Rda")
+load("database4_20s.Rda") 
 
 
 database4 <- database4 %>% mutate(dl1_field.sensor.humidity = fields.sensor.humidity - dplyr::lag(fields.sensor.humidity, n = 1),
