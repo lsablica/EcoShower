@@ -17,7 +17,7 @@ database4 <- database4 %>% mutate(dl1_field.sensor.humidity = fields.sensor.humi
 
 
 
-database4 <- database4 %>% mutate(is_weekend = 1*(wday(int_start(intervals), week_start = 1) %in% c(6,7)))
+database4 <- database4 %>% mutate(is_weekend = 1*(wday(int_start(intervals), week_start = 1) %in% c(6,7))) 
 
 #now we filter data from 5:00 am to 6:00 am in working days and 6 - 9:00 during weekends
 #database4 <- database4 %>% filter((is_weekend == 0 & hour(int_start(intervals)) == 5) | (is_weekend == 1 & hour(int_start(intervals)) >= 6 & hour(int_start(intervals)) <= 8))
